@@ -24,3 +24,15 @@ Open a terminal in 'zed-pcl' directory and execute the following command:
 Open a terminal in build directory and execute the following command:
 
     $ ./ZED\ with\ PCL [path to SVO file]
+
+## Build Visual Studio
+environment
+
+ * IDE Visual Studio 2015 Update3
+ * Compiler Visual Studio 2013
+
+library
+
+ * PCL 1.7.2
+ * OpenCV 2.4.10(NuGet)
+ * CUDA 7.4
