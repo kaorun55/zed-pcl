@@ -64,7 +64,7 @@ typedef struct image_bufferStruct {
 
 Camera* zed;
 image_buffer* buffer;
-SENSING_MODE dm_type = FULL;
+SENSING_MODE dm_type = STANDARD; 
 bool stop_signal;
 
 // Grabbing function
@@ -114,12 +114,17 @@ int main(int argc, char** argv) {
     }
 
     if (argc == 1) // Use in Live Mode
-        zed = new Camera(HD720);
+        zed = new Camera( HD2K );
     else // Use in SVO playback mode
         zed = new Camera(argv[1]);
-	
-	ERRCODE err = zed->init( PERFORMANCE, -1, true, false, false );
-	cout << errcode2str(err) << endl;
+
+	sl::zed::InitParams params;
+	params.mode = QUALITY;
+	params.unit = METER;										// scale to fit openGL world
+	params.coordinate = RIGHT_HANDED;		// openGL compatible
+	params.verbose = true;
+
+	ERRCODE err = zed->init( params );	cout << errcode2str(err) << endl;
     if (err != SUCCESS) {
         delete zed;
         return 1;
@@ -159,8 +164,7 @@ int main(int argc, char** argv) {
             for (auto &it : point_cloud_ptr->points){
 				float X = data_cloud[index4*4];
 				// Checking if it's a valid point
-				//if ( !isValidMeasure( X ) ) {
-				if ( false ) {
+				if ( !isValidMeasure( X ) ) {
 					it.x = it.y = it.z = it.rgb = 0;
 				}
 				else{
