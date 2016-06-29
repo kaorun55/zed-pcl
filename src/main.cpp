@@ -47,6 +47,7 @@
 // PCL includes
 #include <pcl/common/common_headers.h>
 #include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/io/ply_io.h>
 
 using namespace sl::zed;
 using namespace std;
@@ -63,7 +64,7 @@ typedef struct image_bufferStruct {
 
 Camera* zed;
 image_buffer* buffer;
-SENSING_MODE dm_type = STANDARD;
+SENSING_MODE dm_type = FULL;
 bool stop_signal;
 
 // Grabbing function
@@ -95,6 +96,15 @@ std::shared_ptr<pcl::visualization::PCLVisualizer> rgbVis(pcl::PointCloud<pcl::P
     return (viewer);
 }
 
+void keyboardEventOccurred( const pcl::visualization::KeyboardEvent &event, void* viewer_void )
+{
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr = *static_cast<pcl::PointCloud<pcl::PointXYZRGB>::Ptr *> (viewer_void);
+	if ( event.getKeySym() == "s" && event.keyDown() )
+	{
+		pcl::io::savePLYFileASCII( "cloud.ply", *point_cloud_ptr );
+	}
+}
+
 int main(int argc, char** argv) {
     stop_signal = false;
 
@@ -108,14 +118,8 @@ int main(int argc, char** argv) {
     else // Use in SVO playback mode
         zed = new Camera(argv[1]);
 	
-    sl::zed::InitParams params;
-    params.mode = PERFORMANCE;
-	params.unit = METER;										// scale to fit openGL world
-	params.coordinate = RIGHT_HANDED;		// openGL compatible
-    params.verbose = true;
-
-    ERRCODE err = zed->init(params);
-    cout << errcode2str(err) << endl;
+	ERRCODE err = zed->init( PERFORMANCE, -1, true, false, false );
+	cout << errcode2str(err) << endl;
     if (err != SUCCESS) {
         delete zed;
         return 1;
@@ -144,6 +148,7 @@ int main(int argc, char** argv) {
     int index4 = 0;
 
     point_cloud_ptr->points.resize(size);
+	viewer->registerKeyboardCallback( keyboardEventOccurred, (void*)&point_cloud_ptr );
 
     while (!viewer->wasStopped()) {
 
@@ -153,8 +158,11 @@ int main(int argc, char** argv) {
 
             for (auto &it : point_cloud_ptr->points){
 				float X = data_cloud[index4*4];
-				if (!isValidMeasure(X)) // Checking if it's a valid point
-                    it.x = it.y = it.z = it.rgb = 0;
+				// Checking if it's a valid point
+				//if ( !isValidMeasure( X ) ) {
+				if ( false ) {
+					it.x = it.y = it.z = it.rgb = 0;
+				}
 				else{
 					it.x =X;
 					it.y = data_cloud[index4 * 4 + 1];
